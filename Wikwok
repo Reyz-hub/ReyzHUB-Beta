@@ -1,0 +1,49 @@
+-- Reyz Hub by Sayangmu 😘
+loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
+local Rayfield = loadstring(game:HttpGet('https://raw.githubusercontent.com/shlexware/Rayfield/main/source'))()
+local Player, TweenService = game.Players.LocalPlayer, game:GetService("TweenService")
+local SelectedWeapon, AutoFarm = "Melee", false
+
+local function tweenTo(pos)
+    local hrp = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
+    if hrp then
+        local t = TweenService:Create(hrp, TweenInfo.new((hrp.Position - pos.Position).Magnitude/200), {CFrame=pos})
+        t:Play(); t.Completed:Wait()
+    end
+end
+
+local Window = Rayfield:CreateWindow({Name="Reyz Hub | Blox Fruits", LoadingTitle="Reyz Hub Loading...", LoadingSubtitle="By Sayangmu 😘", ConfigurationSaving={Enabled=false}, Discord={Enabled=false}, KeySystem=false})
+local Tab = Window:CreateTab("Main", 4483362458)
+
+Tab:CreateDropdown({Name="Pilih Senjata", Options={"Melee","Sword","Gun"}, CurrentOption="Melee", Callback=function(v) SelectedWeapon=v end})
+Tab:CreateToggle({Name="Auto Farm Aman", CurrentValue=false, Callback=function(v)
+    AutoFarm = v
+    while AutoFarm do
+        pcall(function()
+            local enemies = workspace.Enemies:GetChildren()
+            for _, mob in ipairs(enemies) do
+                if mob:FindFirstChild("Humanoid") and mob.Humanoid.Health>0 then
+                    game.ReplicatedStorage.Remotes.CommF_:InvokeServer("StartQuest",1,"Bandit")
+                    tweenTo(mob.HumanoidRootPart.CFrame * CFrame.new(0,5,0))
+                    for _, tool in ipairs(Player.Backpack:GetChildren()) do
+                        if tool:IsA("Tool") and tool.Name:find(SelectedWeapon) then
+                            tool.Parent = Player.Character
+                            tool:Activate()
+                        end
+                    end
+                    break
+                end
+            end
+        end)
+        task.wait(1)
+    end
+end})
+
+Tab:CreateButton({Name="Anti AFK", Callback=function()
+    local vu = game:GetService("VirtualUser")
+    Player.Idled:Connect(function()
+        vu:Button2Down(Vector2.new(), workspace.CurrentCamera.CFrame)
+        wait(1); vu:Button2Up(Vector2.new(), workspace.CurrentCamera.CFrame)
+    end)
+    Rayfield:Notify({Title="Reyz Hub", Content="Anti AFK Aktif!", Duration=4, Actions={Accept={Name="Oke", Callback=function() end}}})
+end})
