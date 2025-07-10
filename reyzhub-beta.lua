@@ -1,15 +1,27 @@
--- Reyz Hub by Reyz 
+-- Reyz Hub by Sayangmu 😘
 loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 
 local Rayfield = loadstring(game:HttpGet('https://raw.githubusercontent.com/shlexware/Rayfield/main/source'))()
 local Player = game.Players.LocalPlayer
+local TweenService = game:GetService("TweenService")
 local SelectedWeapon = "Melee"
 local AutoFarm = false
+
+local function tweenTo(pos)
+    local char = Player.Character
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    if hrp then
+        local tweenInfo = TweenInfo.new((hrp.Position - pos.Position).Magnitude / 200, Enum.EasingStyle.Linear)
+        local tween = TweenService:Create(hrp, tweenInfo, {CFrame = pos})
+        tween:Play()
+        tween.Completed:Wait()
+    end
+end
 
 local Window = Rayfield:CreateWindow({
    Name = "Reyz Hub | Blox Fruits",
    LoadingTitle = "Reyz Hub Loading...",
-   LoadingSubtitle = "By Reyz 😈",
+   LoadingSubtitle = "By Sayangmu 😘",
    ConfigurationSaving = {
       Enabled = false,
    },
@@ -31,31 +43,43 @@ Tab:CreateDropdown({
 })
 
 Tab:CreateToggle({
-   Name = "Auto Farm (Quest + Kill)",
+   Name = "Auto Farm (Quest + Kill Aman)",
    CurrentValue = false,
    Callback = function(Value)
       AutoFarm = Value
       while AutoFarm do
          pcall(function()
-            local Character = game.Players.LocalPlayer.Character
-            local Enemy = workspace.Enemies:FindFirstChildWhichIsA("Model")
+            local char = Player.Character
+            local enemies = workspace.Enemies:GetChildren()
+            local target = nil
 
-            game.ReplicatedStorage.Remotes.CommF_:InvokeServer("StartQuest", 1, "Bandit") -- contoh quest
-
-            if Enemy and Enemy:FindFirstChild("HumanoidRootPart") then
-               Character.HumanoidRootPart.CFrame = Enemy.HumanoidRootPart.CFrame + Vector3.new(0, 5, 0)
-               wait(0.5)
+            -- Ambil musuh pertama yang aktif
+            for _, mob in pairs(enemies) do
+                if mob:FindFirstChild("Humanoid") and mob.Humanoid.Health > 0 then
+                    target = mob
+                    break
+                end
             end
 
-            for _, tool in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
-               if tool:IsA("Tool") and string.find(tool.Name, SelectedWeapon) then
-                  tool.Parent = Character
-                  tool:Activate()
-               end
+            if target then
+                -- Ambil quest (contoh quest 1: Bandit)
+                game.ReplicatedStorage.Remotes.CommF_:InvokeServer("StartQuest", 1, "Bandit")
+
+                -- Tween ke musuh
+                tweenTo(target.HumanoidRootPart.CFrame * CFrame.new(0, 5, 0))
+
+                -- Serang
+                for _, tool in pairs(Player.Backpack:GetChildren()) do
+                    if tool:IsA("Tool") and string.find(tool.Name, SelectedWeapon) then
+                        tool.Parent = char
+                        tool:Activate()
+                    end
+                end
             end
 
-            wait(1)
+            task.wait(1)
          end)
+         task.wait(0.1)
       end
    end,
 })
@@ -73,8 +97,9 @@ Tab:CreateButton({
          Title = "Anti AFK",
          Content = "Berhasil Aktif!",
          Duration = 4,
-         Image = nil,
-         Actions = { Accept = { Name = "Oke", Callback = function() end } }
+         Actions = {
+            Accept = { Name = "Oke", Callback = function() end }
+         }
       })
    end,
 })
